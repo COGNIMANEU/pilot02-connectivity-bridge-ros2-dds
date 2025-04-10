@@ -1,0 +1,28 @@
+services:
+  publisher:
+    image: ros:humble
+    volumes:
+      - ./test/pub_node:/pub
+    working_dir: /pub
+    command: ["python3", "publisher.py"]
+    environment:
+      - ROS_DOMAIN_ID=0
+    networks:
+      - publisher-net
+
+  subscriber:
+    image: ros:humble
+    volumes:
+      - ./test/sub_node:/sub
+    working_dir: /sub
+    command: ["python3", "subscriber.py"]
+    environment:
+      - ROS_DOMAIN_ID=0
+    networks:
+      - subscriber-net
+
+networks:
+  publisher-net:
+    driver: bridge
+  subscriber-net:
+    driver: bridge      

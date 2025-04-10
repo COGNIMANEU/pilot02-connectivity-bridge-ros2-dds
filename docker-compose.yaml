@@ -1,0 +1,60 @@
+services:
+  bridge-server:
+    build:
+      context: ./src
+      dockerfile: ./Dockerfile      
+    container_name: bridge-server
+    ports:
+      - 7447:7447
+    volumes:
+      - ./config/demo/ddsserver_config.json:/config/serverconfig.json
+    networks:
+      - zenoh-net
+    command: -c /config/serverconfig.json    
+    environment:
+      - ROS_DOMAIN_ID=1   
+
+  subscriber:
+    image: ros:humble
+    volumes:
+      - ./test/sub_node:/sub
+    working_dir: /sub
+    command: ["python3", "subscriber.py"]
+    environment:
+      - ROS_DOMAIN_ID=1
+    depends_on:
+      - bridge-server
+    networks:
+      - zenoh-net
+
+  bridge-client:
+    build:
+      context: ./src
+      dockerfile: ./Dockerfile      
+    container_name: bridge-client
+    volumes:
+      - ./config/demo/ddsclient_config.json:/config/clientconfig.json
+    depends_on:
+      - bridge-server
+    networks:
+      - zenoh-net
+    command: -c /config/clientconfig.json    
+    environment:
+      - ROS_DOMAIN_ID=0
+
+  publisher:
+    image: ros:humble
+    volumes:
+      - ./test/pub_node:/pub
+    working_dir: /pub
+    command: ["python3", "publisher.py"]
+    environment:
+      - ROS_DOMAIN_ID=0
+    depends_on:
+      - bridge-client
+    networks:
+      - zenoh-net
+
+
+networks:
+  zenoh-net:
